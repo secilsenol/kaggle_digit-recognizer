@@ -9,63 +9,61 @@ def sigmoid(x):
 
 #softmax function
 def softmax(x):
-    return np.exp(x)/np.sum(np.exp(x))
+    exp_x = np.exp(x)
+    return exp_x/np.sum(exp_x, axis=0)
 
-#forward pass - bir veya daha fazla instance için çalışıyor
-def forward(X,y,w0,b0,w1,b1,w2,b2):
-    X = X.dot(w0) + b0
-    X = sigmoid(X)
-    X = X.dot(w1) + b1
-    X = sigmoid(X)
-    X = X.dot(w2) + b2
-    X = softmax(X)
+#forward pass
+def forward(X,w0,b0,w1,b1,w2,b2):
 
-    #loop dışında bir çözüm??
-    loss = np.zeros(len(y))
-    for i in range(len(y)):
-        loss[i] = - np.log10(X[i][y[i]])
-    return loss
+    n = X.shape[1]
+    X = w0.dot(X) + np.repeat(b0, n,axis =1)
+    X = sigmoid(X)
+
+    X = w1.dot(X) + np.repeat(b1, n,axis =1)
+    X = sigmoid(X)
+
+    X = w2.dot(X) + np.repeat(b2, n,axis =1)
+    y_pred = softmax(X)
+    return y_pred
+
+#loss function for softmax output
+def loss(y,y_pred):
+    y_pred = y_pred[y,range(y_pred.shape[1])]
+    loss = - np.log10(y_pred)
+    return np.average(loss)
+
+
+#in order to use in accuracy calculation - need attention
+def predict(y_pred):
+    y_pred = np.argmax(y_pred, axis=0)
+    return y_pred
 
 #under construction
 def backprog(loss,X,w0,b0,w1,b1,w2,b2):
     #update weights and bias using loss
     return w0,b0,w1,b1,w2,b2
 
-#make prediction using the updated weights and bias
-def predict(X_new,w0,b0,w1,b1,w2,b2):
-    X = X_new.dot(w0) + b0
-    X = sigmoid(X)
-    X = X.dot(w1) + b1
-    X = sigmoid(X)
-    X = X.dot(w2) + b2
-    X = softmax(X)
-    #if statement için çözüm??
-    if len(X.shape) == 2:
-        y_pred = np.argmax(X, axis = 1)
-    else:
-        y_pred = np.argmax(X)
-
-    return y_pred
-
-
 def main():
 
     df = pd.read_csv("./data/train.csv") #absolute path olabilir
     y = np.array(df["label"])
-    X = np.array(df[df.columns[1::]])
+    X = np.array(df[df.columns[1:]])
     X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size = 0.20, random_state= 31)
+    X_train = np.transpose(X_train)
+    X_valid = np.transpose(X_valid)
 
-    w0 = np.random.rand(784, 50) * 0.01
-    b0 = np.zeros((50))
-    w1 = np.random.rand(50, 20) * 0.01
-    b1 = np.zeros((20))
-    w2 = np.random.rand(20, 10) * 0.01
-    b2 = np.zeros((10))
+    w0 = np.random.rand(50, 784) * 0.01
+    b0 = np.zeros((50,1))
+    w1 = np.random.rand(20, 50) * 0.01
+    b1 = np.zeros((20,1))
+    w2 = np.random.rand(10, 20) * 0.01
+    b2 = np.zeros((10,1))
 
-    X_d = X[0:3]
+    X_d = X_train[:,0:3]
+    y_d = y_train[0:3]
 
-    deneme = forward(X_d,y[0:3],w0,b0,w1,b1,w2,b2)
-    sonuc = predict(X_d, w0, b0, w1, b1, w2, b2)
+    first_pass = forward(X_d,w0,b0,w1,b1,w2,b2)
+    L_soft = loss(y_d,first_pass)
 
     d = 7
 
