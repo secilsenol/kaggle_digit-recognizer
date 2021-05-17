@@ -23,20 +23,21 @@ def forward(X,w0,b0,w1,b1,w2,b2):
     X = sigmoid(X)
 
     X = w2.dot(X) + np.repeat(b2, n,axis =1)
-    y_pred = softmax(X)
-    return y_pred
+    Y_pred = softmax(X)
+    return Y_pred
 
 #loss function for softmax output
-def loss(y,y_pred):
-    y_pred = y_pred[y,range(y_pred.shape[1])]
-    loss = - np.log10(y_pred)
+def loss(Y,Y_pred):
+    Y_pred = np.multiply(Y,Y_pred)
+    y_pred = np.max(Y_pred, axis = 0)
+    loss = - np.log(y_pred)
     return np.average(loss)
 
-
 #in order to use in accuracy calculation - need attention
-def predict(y_pred):
-    y_pred = np.argmax(y_pred, axis=0)
-    return y_pred
+def calculate_accuracy(Y_pred,y):
+    y_pred = np.argmax(Y_pred, axis=0)
+    acc = np.average(np.equal(y,y_pred))
+    return acc
 
 #under construction
 def backprog(loss,X,w0,b0,w1,b1,w2,b2):
@@ -59,11 +60,18 @@ def main():
     w2 = np.random.rand(10, 20) * 0.01
     b2 = np.zeros((10,1))
 
+    #delete this part & update related variables when implementation finishes
     X_d = X_train[:,0:3]
     y_d = y_train[0:3]
 
+    #take this part for initilization
+    Y_d = np.zeros((10,len(y_d)))
+    idx = np.arange(len(y_d))
+    Y_d[y_d,idx] = 1
+
     first_pass = forward(X_d,w0,b0,w1,b1,w2,b2)
-    L_soft = loss(y_d,first_pass)
+    accuracy = calculate_accuracy(first_pass,y_d)
+    L_soft = loss(Y_d,first_pass)
 
     d = 7
 
